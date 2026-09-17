@@ -47,13 +47,13 @@ export const STATS = {
     label: "주급",
     format: (v: number) => `£${v}k`,
     get: (p: Player) => p.weeklyWage,
-    eligible: all,
+    eligible: (p: Player) => p.weeklyWage > 0,
   },
   plGoals: {
     label: "PL 통산 골",
     format: suffix("골"),
     get: (p: Player) => p.plGoals,
-    eligible: outfield,
+    eligible: (p: Player) => outfield(p) && p.plGoals > 0,
   },
   plApps: {
     label: "PL 통산 출전",
@@ -65,13 +65,13 @@ export const STATS = {
     label: "한 시즌 최다 골",
     format: suffix("골"),
     get: (p: Player) => p.bestSeason.goals,
-    eligible: outfield,
+    eligible: (p: Player) => outfield(p) && p.bestSeason.goals > 0,
   },
   seasonAssists: {
     label: "한 시즌 최다 도움",
     format: suffix("도움"),
     get: (p: Player) => p.bestSeason.assists,
-    eligible: outfield,
+    eligible: (p: Player) => outfield(p) && p.bestSeason.assists > 0,
   },
 } as const;
 

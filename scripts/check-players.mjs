@@ -54,4 +54,11 @@ assert.ok(s.startsWith("EPL UP&DOWN 2026-09-17"), s);
 assert.ok(s.includes("12연속") && s.includes("최고 20"), s);
 assert.match(todayKey(), /^\d{4}-\d{2}-\d{2}$/);
 
+// 출제 후보 안에 0이 섞이면 "무조건 더 높다"가 정답인 라운드가 생긴다
+for (const key of STAT_KEYS) {
+  const { get, eligible } = STATS[key];
+  const zeros = players.filter(eligible).filter((p) => get(p) === 0);
+  assert.equal(zeros.length, 0, `${key}: 값이 0인 후보 ${zeros.map((p) => p.name).join()}`);
+}
+
 console.log(`OK — ${players.length}명, ${STAT_KEYS.length}개 스탯, 200라운드 검증 통과`);
