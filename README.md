@@ -1,26 +1,51 @@
-# ⚽ EPL QUIZ
+# ⚽ EPL UP&DOWN
 
-프리미어리그 팬을 위한 반응형 축구 퀴즈 웹앱. 4가지 모드, 매일 바뀌는 정답, 이모지 결과 공유.
+두 프리미어리그 선수의 기록을 비교해 **더 높은지 / 더 낮은지** 맞히는 업다운 게임. 몇 연속까지 갈 수 있나?
 
 **🔗 [https://epl-quiz.vercel.app](https://epl-quiz.vercel.app)**
 
-> MVP 단계 — 데이터는 로컬 JSON(Mock)이며 백엔드 없이 바로 실행됩니다.
+## 규칙
 
-## 퀴즈 모드
+왼쪽 선수의 값이 공개되고, 오른쪽 선수의 값은 가려져 있습니다. 오른쪽이 더 높은지 낮은지 고르면 됩니다. 하나라도 틀리면 종료, 연속 기록이 점수입니다.
 
-| 모드 | 경로 | 설명 |
-| --- | --- | --- |
-| **EPL Wordle** | `/wordle` | 소속팀·국적·포지션·등번호·나이 5속성을 비교해 6번 안에 선수 맞히기. 🟩 일치 / 🟨 같은 계열·근접 / 🟥 불일치, 숫자는 ▲▼ 힌트 |
-| **Goltexto** | `/goltexto` | 아무 선수나 입력하면 정답과의 연관도(%)와 근거를 알려주는 무제한 추리 모드 |
-| **커리어 경로** | `/career` | 거쳐간 클럽을 하나씩 열며 추리. 적게 열고 맞힐수록 고득점(최대 100점) |
-| **이적료 업&다운** | `/updown` | 두 선수의 이적료·주급·최고 시즌 골/어시스트 비교. 연속 정답 기록 |
+비교 스탯은 라운드마다 돌아가며 출제됩니다.
 
-## 주요 기능
+| 스탯 | 단위 |
+| --- | --- |
+| 시장가치 | €M |
+| 최고 이적료 | €M |
+| 주급 | £k |
+| PL 통산 골 | 골 |
+| PL 통산 출전 | 경기 |
+| 한 시즌 최다 골 | 골 |
+| 한 시즌 최다 도움 | 도움 |
 
-- **Daily Challenge** — 날짜+모드를 시드로 한 해시(FNV-1a)로 정답을 고정. 같은 날 접속한 모두가 같은 문제를 풉니다.
-- **결과 공유** — Wordle 결과를 `🟩🟥🟨🔽` 이모지 격자로 클립보드에 복사 (정답 이름은 숨김).
-- **선수 자동완성** — 이름 부분 일치 검색, 앞부분 일치 우선 정렬.
-- **모바일 우선** — 넉넉한 터치 타깃, 375px 기준 레이아웃, EPL 시그니처 컬러(`#38003c`) 테마.
+- **정답이 뻔한 조합은 출제되지 않습니다** — 자유이적(€0) 선수의 이적료 라운드, 골키퍼의 통산 골 라운드 등은 후보에서 제외.
+- **무승부 없음** — 두 값이 같으면 다른 선수로 교체해 항상 정답이 존재합니다.
+- **연속 기록**은 브라우저(localStorage)에만 저장되며, 결과 화면에서 이모지 텍스트로 복사해 공유할 수 있습니다.
+
+## 선수 데이터
+
+현역 프리미어리그 주축 선수 + 리그 레전드 **77명**. 2025-26 시즌 기준으로 갱신했습니다.
+
+```jsonc
+{
+  "id": "haaland",
+  "name": "Erling Haaland",
+  "team": "Manchester City",   // 은퇴 선수는 "레전드"
+  "nationality": "Norway",
+  "position": "FW",            // GK | DF | MF | FW
+  "age": 25,
+  "marketValue": 180,          // 현재(은퇴 선수는 전성기) 추정 시장가치, €M
+  "transferFee": 60,           // 커리어 최고 이적료, €M
+  "weeklyWage": 525,           // 주급, £k
+  "plGoals": 105,              // PL 통산 골
+  "plApps": 130,               // PL 통산 출전
+  "bestSeason": { "season": "2022-23", "goals": 36, "assists": 8 }
+}
+```
+
+> 수치는 공개 자료 기반의 **근사치**이며 게임용입니다. 정확한 기록은 공식 출처를 확인하세요.
 
 ## 기술 스택
 
@@ -31,58 +56,25 @@ Next.js 16 (App Router) · TypeScript · Tailwind CSS v4 · Framer Motion · Luc
 ```bash
 npm install
 npm run dev        # http://localhost:3000
-npm run build      # 프로덕션 빌드
-node scripts/check-players.mjs   # 데이터셋 + 퀴즈 로직 자체 점검
+npm run build
+node scripts/check-players.mjs   # 데이터셋 + 출제 로직 자체 점검
 ```
 
-## 프로젝트 구조
+## 구조
 
 ```
 src/
-  app/                  # 라우트 (/, /wordle, /goltexto, /career, /updown)
+  app/page.tsx            # 게임 화면 (단일 페이지)
   components/
-    EplHeader.tsx       # 공통 헤더
-    PlayerSearch.tsx    # 선수 자동완성 입력
-    ResultModal.tsx     # 결과 모달 + 클립보드 공유
-    quiz/               # 4개 모드 컴포넌트
+    EplHeader.tsx         # 헤더
+    UpDownGame.tsx        # 게임 본체
+    ResultModal.tsx       # 결과 모달 + 클립보드 공유
   lib/
-    quiz.ts             # 순수 로직: 판정·연관도·점수·일일 시드
-    players.ts          # 데이터 로딩 + 편의 함수
-  data/
-    epl_players.json    # 선수 46명 (현역 + 레전드)
-scripts/
-  check-players.mjs     # assert 기반 자체 점검
+    quiz.ts               # 순수 로직: 스탯 정의, 라운드 생성, 공유 텍스트
+    players.ts            # 데이터 로딩
+  data/epl_players.json   # 선수 77명
+scripts/check-players.mjs # assert 기반 자체 점검
 ```
-
-## 데이터 스키마
-
-```jsonc
-{
-  "id": "salah",
-  "name": "Mohamed Salah",
-  "nationality": "Egypt",
-  "team": "Liverpool",
-  "position": "FW",            // GK | DF | MF | FW
-  "number": 11,
-  "age": 33,
-  "transferFee": 42,           // 최고 이적료, €M
-  "weeklyWage": 350,           // 주급, £k
-  "careerClubs": ["El Mokawloon", "Basel", "Chelsea", "Fiorentina", "Roma", "Liverpool"],
-  "bestSeason": { "season": "2017-18", "goals": 32, "assists": 10 }
-}
-```
-
-선수 데이터는 공개된 프로필 정보 기반의 **근사치**이며 퀴즈용입니다. 정확한 기록은 공식 출처를 확인하세요.
-
-## 백엔드 교체
-
-`src/lib/players.ts` 한 파일만 Supabase 등 원격 조회로 바꾸면 됩니다. 퀴즈 로직(`src/lib/quiz.ts`)은 데이터 소스와 무관한 순수 함수입니다.
-
-## 로드맵
-
-- [ ] 클럽 로고 이미지 / 커리어 타임라인 시각 강화
-- [ ] 로컬 스토리지 기반 기록·연속 출석
-- [ ] Supabase 연동 및 글로벌 리더보드
 
 ## 배포
 
@@ -91,6 +83,12 @@ Vercel CLI로 배포합니다 (Git 연동은 아직 없음).
 ```bash
 npx vercel --prod
 ```
+
+## 로드맵
+
+- [ ] 선수 사진 / 클럽 로고
+- [ ] 글로벌 리더보드 (Supabase)
+- [ ] 일일 고정 시드 챌린지 (같은 문제로 전 세계 랭킹)
 
 ## 라이선스
 

@@ -1,121 +1,57 @@
-// node scripts/check-players.mjs — 데이터셋 + 퀴즈 로직 자체 점검
+// node scripts/check-players.mjs — 데이터셋 + 업다운 로직 자체 점검
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import {
-  searchPlayers,
-  dailyPlayer,
-  positionGroup,
-  statOf,
-  compareGuess,
-  shareText,
-  similarity,
-  careerScore,
-  pickPair,
-} from "../src/lib/quiz.ts";
+import { STATS, STAT_KEYS, buildRound, isHigher, shareText, todayKey } from "../src/lib/quiz.ts";
 
 const players = JSON.parse(readFileSync(new URL("../src/data/epl_players.json", import.meta.url)));
 
 // 데이터셋 무결성
-assert.ok(players.length >= 30, `선수 30명 이상 필요, 현재 ${players.length}`);
+assert.ok(players.length >= 50, `선수 50명 이상 필요, 현재 ${players.length}`);
 assert.equal(new Set(players.map((p) => p.id)).size, players.length, "id 중복");
+assert.equal(new Set(players.map((p) => p.name)).size, players.length, "이름 중복");
+
 for (const p of players) {
-  for (const k of ["id", "name", "nationality", "team", "position", "careerClubs", "bestSeason"]) {
-    assert.ok(p[k] != null, `${p.id}: ${k} 누락`);
-  }
+  assert.ok(p.name && p.team && p.nationality, `${p.id}: 기본 정보 누락`);
   assert.ok(["GK", "DF", "MF", "FW"].includes(p.position), `${p.id}: 잘못된 포지션`);
-  assert.ok(p.number >= 1 && p.number <= 99, `${p.id}: 등번호 범위`);
   assert.ok(p.age > 15 && p.age < 100, `${p.id}: 나이 범위`);
-  assert.ok(p.careerClubs.length >= 1, `${p.id}: 커리어 클럽 없음`);
-  assert.ok(
-    p.careerClubs.includes(p.team) || p.team === "Retired",
-    `${p.id}: 현 소속팀이 커리어에 없음`,
-  );
-  for (const key of Object.keys(statOf)) {
-    assert.equal(typeof statOf[key](p), "number", `${p.id}: ${key} 숫자 아님`);
+  for (const key of STAT_KEYS) {
+    const v = STATS[key].get(p);
+    assert.equal(typeof v, "number", `${p.id}: ${key} 숫자 아님`);
+    assert.ok(v >= 0 && Number.isFinite(v), `${p.id}: ${key} 값 이상 (${v})`);
+  }
+  assert.ok(p.plGoals <= p.plApps, `${p.id}: 통산 골이 출전 수보다 많음`);
+  assert.ok(p.bestSeason.goals <= 50 && p.bestSeason.assists <= 30, `${p.id}: 시즌 기록 과다`);
+}
+
+// 라운드 구성: 결정적이고, 항상 서로 다른 두 선수 + 무승부 없음
+for (let r = 0; r < 200; r++) {
+  const a = buildRound(players, "2026-09-17", r);
+  const b = buildRound(players, "2026-09-17", r);
+  assert.equal(a.left.id, b.left.id, `라운드 ${r}: 같은 시드인데 문제가 다름`);
+  assert.equal(a.right.id, b.right.id, `라운드 ${r}: 같은 시드인데 문제가 다름`);
+  assert.notEqual(a.left.id, a.right.id, `라운드 ${r}: 같은 선수끼리 비교`);
+  const { get, eligible } = STATS[a.stat];
+  assert.notEqual(get(a.left), get(a.right), `라운드 ${r}: 값이 같아 정답이 없음`);
+  assert.equal(isHigher(a), get(a.right) > get(a.left));
+  if (eligible) {
+    // 자유이적(€0)이나 골키퍼의 통산 골처럼 정답이 뻔한 조합은 출제되면 안 된다
+    assert.ok(eligible(a.left) && eligible(a.right), `라운드 ${r}: ${a.stat} 부적격 선수 출제`);
   }
 }
 
-// 자동완성
-assert.equal(searchPlayers(players, "").length, 0, "빈 검색어는 결과 없음");
-assert.equal(searchPlayers(players, "salah")[0].name, "Mohamed Salah");
-assert.equal(searchPlayers(players, "SAL")[0].name, "Mohamed Salah", "대소문자 무시");
-assert.ok(searchPlayers(players, "a", 5).length <= 5, "limit 적용");
+// 시드가 다르면 문제도 달라진다
+const runA = Array.from({ length: 20 }, (_, r) => buildRound(players, "seed-a", r).left.id).join();
+const runB = Array.from({ length: 20 }, (_, r) => buildRound(players, "seed-b", r).left.id).join();
+assert.notEqual(runA, runB, "시드가 달라도 같은 순서");
 
-// 일일 정답: 같은 날짜는 고정, 다른 날짜는 갈린다
-assert.equal(
-  dailyPlayer(players, "wordle", "2026-09-17").id,
-  dailyPlayer(players, "wordle", "2026-09-17").id,
-);
-const spread = new Set(
-  Array.from(
-    { length: 60 },
-    (_, i) => dailyPlayer(players, "wordle", `2026-09-${String(i + 1).padStart(2, "0")}`).id,
-  ),
-);
-assert.ok(spread.size > 10, `일일 정답이 편중됨 (${spread.size}종)`);
-
-// 포지션 그룹(노란색 판정)
-assert.equal(positionGroup("FW"), positionGroup("MF"));
-assert.notEqual(positionGroup("FW"), positionGroup("GK"));
-
-// Wordle 판정
-const byId = (id) => players.find((p) => p.id === id);
-const salah = byId("salah");
-const haaland = byId("haaland");
-const alisson = byId("alisson");
-
-const self = compareGuess(salah, salah);
-assert.ok(
-  self.every((c) => c.state === "hit"),
-  "자기 자신은 전부 hit",
-);
-assert.ok(
-  self.every((c) => c.dir === undefined),
-  "일치하면 방향 표시 없음",
-);
-
-const vs = compareGuess(haaland, salah);
-assert.equal(vs.find((c) => c.key === "team").state, "miss");
-assert.equal(vs.find((c) => c.key === "position").state, "hit", "FW vs FW");
-assert.equal(
-  compareGuess(alisson, salah).find((c) => c.key === "position").state,
-  "miss",
-  "GK vs FW는 그룹도 다름",
-);
-assert.equal(
-  compareGuess(byId("rodri"), salah).find((c) => c.key === "position").state,
-  "near",
-  "MF vs FW는 같은 그룹",
-);
-// 나이: 살라(33)를 하란드(25)로 추측 → 정답이 더 많다 = up
-assert.equal(vs.find((c) => c.key === "age").dir, "up");
+// 모든 스탯이 출제에 쓰인다
+const used = new Set(Array.from({ length: 30 }, (_, r) => buildRound(players, "x", r).stat));
+assert.equal(used.size, STAT_KEYS.length, `출제되지 않는 스탯 존재 (${[...used].join()})`);
 
 // 공유 텍스트
-const share = shareText([compareGuess(haaland, salah), self], true, "2026-09-17");
-assert.ok(share.startsWith("EPL Wordle 2026-09-17 2/6"), share);
-assert.ok(share.includes("🟩🟩🟩🟩🟩"), "정답 줄은 전부 초록");
-assert.ok(/[🔼🔽]/u.test(share), "숫자 힌트 방향 이모지 포함");
-assert.ok(!share.includes(salah.name), "정답 이름은 공유 텍스트에 없음");
+const s = shareText(12, 20, "2026-09-17");
+assert.ok(s.startsWith("EPL UP&DOWN 2026-09-17"), s);
+assert.ok(s.includes("12연속") && s.includes("최고 20"), s);
+assert.match(todayKey(), /^\d{4}-\d{2}-\d{2}$/);
 
-// 연관도: 자기 자신 > 같은 팀 > 무관
-const same = similarity(byId("gakpo"), byId("vvd")).score; // 같은 팀 + 같은 국적
-const other = similarity(alisson, byId("vieira")).score;
-assert.ok(similarity(salah, salah).score > same, "자기 자신이 최고점");
-assert.ok(same > other, `같은 팀/국적이 더 높아야 함 (${same} vs ${other})`);
-assert.ok(similarity(salah, salah).percent <= 100, "퍼센트 상한");
-
-// 커리어 점수: 적게 열수록 높고 0 미만 없음
-assert.equal(careerScore(1, 0), 100);
-assert.ok(careerScore(3, 1) < careerScore(1, 0));
-assert.equal(careerScore(20, 20), 0);
-
-// Up&Down 페어: 서로 다르고 값이 갈린다
-for (const stat of Object.keys(statOf)) {
-  for (let seed = 0; seed < 30; seed++) {
-    const [a, b] = pickPair(players, stat, seed);
-    assert.notEqual(a.id, b.id, `${stat}/${seed}: 같은 선수`);
-    assert.notEqual(statOf[stat](a), statOf[stat](b), `${stat}/${seed}: 무승부`);
-  }
-}
-
-console.log(`OK — ${players.length}명, 일일 정답 ${spread.size}종/60일, 4개 모드 로직 통과`);
+console.log(`OK — ${players.length}명, ${STAT_KEYS.length}개 스탯, 200라운드 검증 통과`);

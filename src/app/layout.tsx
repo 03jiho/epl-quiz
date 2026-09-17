@@ -6,8 +6,9 @@ import EplHeader from "@/components/EplHeader";
 const geist = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "EPL QUIZ — 프리미어리그 축구 퀴즈",
-  description: "Wordle, Goltexto, 커리어 경로, 이적료 업다운. 매일 새로운 EPL 퀴즈.",
+  title: "EPL UP&DOWN — 프리미어리그 업다운 게임",
+  description:
+    "두 선수의 시장가치·이적료·주급·통산 기록을 비교하는 프리미어리그 업다운 게임. 몇 연속까지 맞힐 수 있나?",
 };
 
 export const viewport: Viewport = {
