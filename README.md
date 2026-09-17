@@ -2,6 +2,8 @@
 
 프리미어리그 팬을 위한 반응형 축구 퀴즈 웹앱. 4가지 모드, 매일 바뀌는 정답, 이모지 결과 공유.
 
+**🔗 [https://epl-quiz.vercel.app](https://epl-quiz.vercel.app)**
+
 > MVP 단계 — 데이터는 로컬 JSON(Mock)이며 백엔드 없이 바로 실행됩니다.
 
 ## 퀴즈 모드
@@ -81,6 +83,14 @@ scripts/
 - [ ] 클럽 로고 이미지 / 커리어 타임라인 시각 강화
 - [ ] 로컬 스토리지 기반 기록·연속 출석
 - [ ] Supabase 연동 및 글로벌 리더보드
+
+## 배포
+
+Vercel CLI로 배포합니다 (Git 연동은 아직 없음).
+
+```bash
+npx vercel --prod
+```
 
 ## 라이선스
 

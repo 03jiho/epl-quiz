@@ -81,7 +81,9 @@ export default function Home() {
         ))}
       </section>
 
-      <p className="text-center text-xs text-white/40">Step 3에서 각 모드 화면이 연결됩니다.</p>
+      <p className="text-center text-xs text-white/40">
+        Wordle·Goltexto·커리어는 매일 0시 정답이 바뀝니다. 업&amp;다운은 무한 모드.
+      </p>
     </div>
   );
 }
