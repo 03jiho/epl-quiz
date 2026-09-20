@@ -1,7 +1,8 @@
 import UpDownGame from "@/components/UpDownGame";
 import { players, todayKey } from "@/lib/players";
 
-export const revalidate = 3600;
+// 새로고침할 때마다 새 조합이 나오도록 매 요청 렌더 (캐시 금지)
+export const dynamic = "force-dynamic";
 
 export default function Home() {
   return (
@@ -15,7 +16,11 @@ export default function Home() {
         </p>
       </section>
 
-      <UpDownGame players={players} dateKey={todayKey()} />
+      <UpDownGame
+        players={players}
+        dateKey={todayKey()}
+        initialSeed={Math.random().toString(36).slice(2)}
+      />
     </div>
   );
 }

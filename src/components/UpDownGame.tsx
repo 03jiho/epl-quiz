@@ -8,14 +8,23 @@ import { STATS, buildRound, isHigher, shareText, type Player } from "@/lib/quiz"
 
 const BEST_KEY = "epl-updown-best";
 
-export default function UpDownGame({ players, dateKey }: { players: Player[]; dateKey: string }) {
+export default function UpDownGame({
+  players,
+  dateKey,
+  initialSeed,
+}: {
+  players: Player[];
+  dateKey: string;
+  /** 서버에서 매 요청 새로 만든 시드 — 새로고침하면 새 조합 */
+  initialSeed: string;
+}) {
   const [round, setRound] = useState(0);
   const [streak, setStreak] = useState(0);
   const [best, setBest] = useState(0);
   const [picked, setPicked] = useState<"up" | "down" | null>(null);
   const [dead, setDead] = useState(false);
   /** 한 판이 끝날 때마다 바뀌는 시드 — 매번 새 문제 순서 */
-  const [seed, setSeed] = useState(dateKey);
+  const [seed, setSeed] = useState(initialSeed);
 
   // 최고 기록은 브라우저에만 저장. 차단된 환경에서도 게임은 그대로 동작한다.
   useEffect(() => {
@@ -57,7 +66,7 @@ export default function UpDownGame({ players, dateKey }: { players: Player[]; da
   }
 
   function restart() {
-    setSeed(`${dateKey}:${Date.now()}`);
+    setSeed(`${initialSeed}:${Date.now()}:${Math.random()}`);
     setRound(0);
     setStreak(0);
     setPicked(null);
