@@ -1,7 +1,16 @@
 // node scripts/check-players.mjs — 데이터셋 + 업다운 로직 자체 점검
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { STATS, STAT_KEYS, buildRound, isHigher, shareText, todayKey } from "../src/lib/quiz.ts";
+import {
+  STATS,
+  STAT_KEYS,
+  BLOCK_SIZE,
+  statForRound,
+  buildRound,
+  isHigher,
+  shareText,
+  todayKey,
+} from "../src/lib/quiz.ts";
 
 const players = JSON.parse(readFileSync(new URL("../src/data/epl_players.json", import.meta.url)));
 
@@ -24,12 +33,17 @@ for (const p of players) {
 }
 
 // 라운드 구성: 결정적이고, 항상 서로 다른 두 선수 + 무승부 없음
+let chained = 0;
+let tight = 0;
+let coinFlip = 0;
+let prev = null;
 for (let r = 0; r < 200; r++) {
   const a = buildRound(players, "2026-09-17", r);
   const b = buildRound(players, "2026-09-17", r);
   assert.equal(a.left.id, b.left.id, `라운드 ${r}: 같은 시드인데 문제가 다름`);
   assert.equal(a.right.id, b.right.id, `라운드 ${r}: 같은 시드인데 문제가 다름`);
   assert.notEqual(a.left.id, a.right.id, `라운드 ${r}: 같은 선수끼리 비교`);
+
   const { get, eligible } = STATS[a.stat];
   assert.notEqual(get(a.left), get(a.right), `라운드 ${r}: 값이 같아 정답이 없음`);
   assert.equal(isHigher(a), get(a.right) > get(a.left));
@@ -37,6 +51,39 @@ for (let r = 0; r < 200; r++) {
     // 자유이적(€0)이나 골키퍼의 통산 골처럼 정답이 뻔한 조합은 출제되면 안 된다
     assert.ok(eligible(a.left) && eligible(a.right), `라운드 ${r}: ${a.stat} 부적격 선수 출제`);
   }
+
+  // 스탯 블록: BLOCK_SIZE 라운드마다 바뀐다
+  assert.equal(a.stat, statForRound(r), `라운드 ${r}: 스탯 불일치`);
+  assert.equal(a.isStatChange, r > 0 && r % BLOCK_SIZE === 0, `라운드 ${r}: 스탯 변경 표시 오류`);
+
+  // 사슬: 블록 안에서는 직전 오른쪽이 이번 왼쪽이 된다
+  if (prev && r % BLOCK_SIZE !== 0) {
+    assert.equal(prev.right.id, a.left.id, `라운드 ${r}: 사슬이 끊김`);
+    chained++;
+  }
+
+  // 난이도: 배율 분포를 본다 (너무 붙으면 찍기, 너무 벌어지면 뻔함)
+  const lo = Math.min(get(a.left), get(a.right));
+  const hi = Math.max(get(a.left), get(a.right));
+  const spread = hi / lo;
+  if (spread <= 4) tight++;
+  if (spread < 1.12) coinFlip++;
+
+  prev = a;
+}
+assert.ok(chained >= 150, `사슬로 이어진 라운드가 너무 적음 (${chained}/200)`);
+assert.ok(tight / 200 >= 0.8, `뻔한 라운드가 많음 — 4배 이내 비율 ${Math.round((tight / 200) * 100)}%`);
+assert.ok(coinFlip / 200 <= 0.05, `거의 동급이라 찍어야 하는 라운드가 많음 (${coinFlip}/200)`);
+
+// 한 블록 안에서 같은 선수가 두 번 나오지 않는다
+for (let block = 0; block < 12; block++) {
+  const seen = new Set();
+  for (let step = 0; step < BLOCK_SIZE; step++) {
+    const { left, right } = buildRound(players, "block-test", block * BLOCK_SIZE + step);
+    seen.add(left.id);
+    seen.add(right.id);
+  }
+  assert.equal(seen.size, BLOCK_SIZE + 1, `블록 ${block}: 같은 선수가 재등장`);
 }
 
 // 시드가 다르면 문제도 달라진다
@@ -45,7 +92,9 @@ const runB = Array.from({ length: 20 }, (_, r) => buildRound(players, "seed-b", 
 assert.notEqual(runA, runB, "시드가 달라도 같은 순서");
 
 // 모든 스탯이 출제에 쓰인다
-const used = new Set(Array.from({ length: 30 }, (_, r) => buildRound(players, "x", r).stat));
+const used = new Set(
+  Array.from({ length: BLOCK_SIZE * STAT_KEYS.length }, (_, r) => buildRound(players, "x", r).stat),
+);
 assert.equal(used.size, STAT_KEYS.length, `출제되지 않는 스탯 존재 (${[...used].join()})`);
 
 // 공유 텍스트
@@ -61,4 +110,7 @@ for (const key of STAT_KEYS) {
   assert.equal(zeros.length, 0, `${key}: 값이 0인 후보 ${zeros.map((p) => p.name).join()}`);
 }
 
-console.log(`OK — ${players.length}명, ${STAT_KEYS.length}개 스탯, 200라운드 검증 통과`);
+console.log(
+  `OK — ${players.length}명, ${STAT_KEYS.length}개 스탯, 200라운드 검증 통과 ` +
+    `(사슬 ${chained}/200, 팽팽한 라운드 ${Math.round((tight / 200) * 100)}%)`,
+);

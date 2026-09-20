@@ -97,26 +97,102 @@ export interface Round {
   left: Player;
   right: Player;
   stat: StatKey;
+  /** 이번 라운드부터 새 스탯 — 사슬이 여기서 끊기고 기준이 새로 잡힌다 */
+  isStatChange: boolean;
+}
+
+/** 한 스탯으로 이어서 푸는 라운드 수. 이 단위로 사슬이 끊기고 스탯이 바뀐다. */
+export const BLOCK_SIZE = 5;
+
+export function statForRound(round: number): StatKey {
+  return STAT_KEYS[Math.floor(round / BLOCK_SIZE) % STAT_KEYS.length];
+}
+
+/**
+ * 난이도 구간. 기준값 대비 배율이며, 가중치만큼 섞여 나온다.
+ * 전부 좁게 잡으면 찍기 게임이 되고, 넓게만 잡으면 뻔해진다.
+ */
+const BANDS: { min: number; max: number; weight: number }[] = [
+  { min: 1.12, max: 1.6, weight: 3 }, // 팽팽
+  { min: 1.6, max: 2.8, weight: 5 }, // 보통
+  { min: 2.8, max: 6, weight: 2 }, // 여유
+];
+const TOTAL_WEIGHT = BANDS.reduce((sum, b) => sum + b.weight, 0);
+
+function bandFor(seed: string) {
+  let roll = hash(`${seed}:band`) % TOTAL_WEIGHT;
+  for (const band of BANDS) {
+    if (roll < band.weight) return band;
+    roll -= band.weight;
+  }
+  return BANDS[BANDS.length - 1];
+}
+
+/**
+ * 기준 선수와 견줄 만한 상대를 고른다.
+ * 뽑힌 난이도 구간 안에서 먼저 찾고, 후보가 모자라면 구간을 넓힌다.
+ */
+function pickChallenger(
+  pool: Player[],
+  anchor: Player,
+  get: (p: Player) => number,
+  seed: string,
+  used: Set<string>,
+): Player | null {
+  const anchorValue = get(anchor);
+  const candidates = pool.filter((p) => !used.has(p.id) && get(p) !== anchorValue);
+  if (candidates.length === 0) return null;
+
+  const ratio = (p: Player) => {
+    const v = get(p);
+    return v > anchorValue ? v / anchorValue : anchorValue / v;
+  };
+  const band = bandFor(seed);
+  const attempts = [
+    (p: Player) => ratio(p) >= band.min && ratio(p) <= band.max,
+    (p: Player) => ratio(p) >= band.min, // 위쪽으로 넓히기
+    (p: Player) => ratio(p) >= 1.12, // 거의 동급인 찍기 라운드만 제외
+  ];
+
+  for (const matches of attempts) {
+    const near = candidates.filter(matches);
+    if (near.length >= 3) return near[hash(seed) % near.length];
+  }
+  return candidates[hash(seed) % candidates.length];
 }
 
 /**
  * 라운드 구성. 같은 seed·round면 항상 같은 문제가 나온다.
- * 값이 같으면(무승부) 다음 후보로 밀어 정답이 애매한 라운드를 만들지 않는다.
+ *
+ * 맞힌 오른쪽 카드가 다음 라운드의 기준(왼쪽)이 되는 사슬 구조이며,
+ * BLOCK_SIZE 라운드마다 스탯이 바뀌면서 사슬이 새로 시작된다.
+ * 한 블록 안에서는 같은 선수가 두 번 나오지 않는다.
  */
 export function buildRound(players: Player[], seed: string, round: number): Round {
-  const stat = STAT_KEYS[round % STAT_KEYS.length];
+  const stat = statForRound(round);
   const { get, eligible } = STATS[stat];
   const pool = players.filter(eligible);
-  const a = pool[hash(`${seed}:L:${round}`) % pool.length];
-  const start = hash(`${seed}:R:${round}`) % pool.length;
+  const block = Math.floor(round / BLOCK_SIZE);
+  const step = round % BLOCK_SIZE;
+  const isStatChange = step === 0 && round > 0;
 
-  for (let n = 0; n < pool.length; n++) {
-    const b = pool[(start + n) % pool.length];
-    if (b.id !== a.id && get(b) !== get(a)) return { left: a, right: b, stat };
+  let left = pool[hash(`${seed}:anchor:${block}`) % pool.length];
+  let right = left;
+  const used = new Set([left.id]);
+
+  // 블록 시작부터 현재 라운드까지 사슬을 다시 만든다 (최대 BLOCK_SIZE회)
+  for (let i = 0; i <= step; i++) {
+    const next = pickChallenger(pool, left, get, `${seed}:${block}:${i}`, used);
+    if (!next) break;
+    used.add(next.id);
+    if (i === step) {
+      right = next;
+      break;
+    }
+    left = next;
   }
-  // 모든 선수 값이 같은 극단적 데이터셋 방어
-  const fallback = pool[(pool.indexOf(a) + 1) % pool.length];
-  return { left: a, right: fallback, stat };
+
+  return { left, right, stat, isStatChange };
 }
 
 /** 오른쪽이 더 큰가? */

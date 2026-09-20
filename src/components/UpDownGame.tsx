@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { ChevronDown, ChevronUp, Flame, Trophy } from "lucide-react";
 import ResultModal from "@/components/ResultModal";
-import { STATS, buildRound, isHigher, shareText, type Player } from "@/lib/quiz";
+import { BLOCK_SIZE, STATS, buildRound, isHigher, shareText, type Player } from "@/lib/quiz";
 
 const BEST_KEY = "epl-updown-best";
 
@@ -44,9 +44,10 @@ export default function UpDownGame({
     }
   }
 
-  const { left, right, stat } = buildRound(players, seed, round);
+  const currentRound = buildRound(players, seed, round);
+  const { left, right, stat, isStatChange } = currentRound;
   const { label, format, get } = STATS[stat];
-  const answerHigher = isHigher({ left, right, stat });
+  const answerHigher = isHigher(currentRound);
 
   function answer(choice: "up" | "down") {
     if (picked) return;
@@ -87,18 +88,42 @@ export default function UpDownGame({
         </span>
       </div>
 
-      <p className="text-center">
-        <span className="rounded-full bg-white/10 px-4 py-1.5 text-sm font-semibold">{label}</span>
-      </p>
+      <div className="flex flex-col items-center gap-1">
+        <motion.span
+          key={stat}
+          initial={{ scale: 0.85, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          className={`rounded-full px-4 py-1.5 text-sm font-semibold ${
+            isStatChange ? "bg-epl-green text-epl-purple" : "bg-white/10"
+          }`}
+        >
+          {isStatChange ? `스탯 변경 · ${label}` : label}
+        </motion.span>
+        <span className="text-[11px] text-white/35">{`${BLOCK_SIZE}라운드마다 스탯이 바뀝니다`}</span>
+      </div>
 
       <div className="grid grid-cols-2 gap-3">
-        <PlayerCard player={left} value={format(get(left))} />
-        <PlayerCard
-          player={right}
-          value={picked ? format(get(right)) : "?"}
-          revealed={!!picked}
-          higher={answerHigher}
-        />
+        <motion.div
+          key={`L-${left.id}-${stat}`}
+          initial={{ x: isStatChange || round === 0 ? 0 : 110, opacity: isStatChange ? 0 : 0.6 }}
+          animate={{ x: 0, opacity: 1 }}
+          transition={{ type: "spring", stiffness: 260, damping: 26 }}
+        >
+          <PlayerCard player={left} value={format(get(left))} />
+        </motion.div>
+        <motion.div
+          key={`R-${right.id}-${stat}`}
+          initial={{ x: 40, opacity: 0 }}
+          animate={{ x: 0, opacity: 1 }}
+          transition={{ type: "spring", stiffness: 260, damping: 26, delay: 0.05 }}
+        >
+          <PlayerCard
+            player={right}
+            value={picked ? format(get(right)) : "?"}
+            revealed={!!picked}
+            higher={answerHigher}
+          />
+        </motion.div>
       </div>
 
       <div className="grid grid-cols-2 gap-3">
