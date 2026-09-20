@@ -24,7 +24,7 @@
 - **무승부 없음** — 두 값이 같으면 다른 선수로 교체해 항상 정답이 존재합니다.
 - **연속 기록**은 브라우저(localStorage)에만 저장되며, 결과 화면에서 텍스트로 복사해 공유할 수 있습니다.
 - **새로고침하거나 다시하기를 누를 때마다 완전히 새로운 조합**이 출제됩니다.
-- **링크 미리보기 썸네일**(1200×630)은 `src/app/opengraph-image.tsx`에서 `next/og`로 생성됩니다.
+- **링크 미리보기 썸네일**(1200×630)은 `src/app/opengraph-image.tsx`에서 `next/og`로 생성됩니다. 한글은 서브셋 폰트(각 26KB)를 쓰며, 문구에 새 글자를 추가하면 `node scripts/build-og-font.mjs`로 폰트를 다시 받아야 합니다.
 
 ## 선수 데이터
 
@@ -78,7 +78,9 @@ src/
     quiz.ts               # 순수 로직: 스탯 정의, 라운드 생성, 공유 텍스트
     players.ts            # 데이터 로딩
   data/epl_players.json   # 선수 106명
+  app/fonts/              # 썸네일용 한글 서브셋 폰트
 scripts/check-players.mjs # assert 기반 자체 점검
+scripts/build-og-font.mjs # 썸네일 폰트 서브셋 다운로드
 ```
 
 ## 배포
