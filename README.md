@@ -24,6 +24,7 @@
 - **무승부 없음** — 두 값이 같으면 다른 선수로 교체해 항상 정답이 존재합니다.
 - **연속 기록**은 브라우저(localStorage)에만 저장되며, 결과 화면에서 텍스트로 복사해 공유할 수 있습니다.
 - **새로고침하거나 다시하기를 누를 때마다 완전히 새로운 조합**이 출제됩니다.
+- **링크 미리보기 썸네일**(1200×630)은 `src/app/opengraph-image.tsx`에서 `next/og`로 생성됩니다.
 
 ## 선수 데이터
 
@@ -68,6 +69,7 @@ node scripts/check-players.mjs   # 데이터셋 + 출제 로직 자체 점검
 ```
 src/
   app/page.tsx            # 게임 화면 (단일 페이지)
+  app/opengraph-image.tsx # 공유 썸네일 (OG 이미지, 1200x630)
   components/
     EplHeader.tsx         # 헤더
     UpDownGame.tsx        # 게임 본체

@@ -5,10 +5,17 @@ import EplHeader from "@/components/EplHeader";
 
 const geist = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 
+const title = "EPL UP&DOWN — 프리미어리그 업다운 게임";
+const description =
+  "두 선수의 시장가치·이적료·주급·통산 기록을 비교하는 프리미어리그 업다운 게임. 몇 연속까지 맞힐 수 있나?";
+
 export const metadata: Metadata = {
-  title: "EPL UP&DOWN — 프리미어리그 업다운 게임",
-  description:
-    "두 선수의 시장가치·이적료·주급·통산 기록을 비교하는 프리미어리그 업다운 게임. 몇 연속까지 맞힐 수 있나?",
+  // og:image를 절대 URL로 만들기 위해 필요
+  metadataBase: new URL("https://epl-quiz.vercel.app"),
+  title,
+  description,
+  openGraph: { title, description, type: "website", locale: "ko_KR" },
+  twitter: { card: "summary_large_image", title, description },
 };
 
 export const viewport: Viewport = {
