@@ -50,7 +50,7 @@
   "position": "FW",            // GK | DF | MF | FW
   "age": 25,
   "marketValue": 180,          // 현재(은퇴 선수는 전성기) 추정 시장가치, €M
-  "transferFee": 60,           // 커리어 최고 이적료, €M
+  "transferFee": 60,           // 커리어 최고 이적료, €M (PL 밖 이적 포함)
   "weeklyWage": 525,           // 주급, £k
   "plGoals": 105,              // PL 통산 골
   "plApps": 130,               // PL 통산 출전
