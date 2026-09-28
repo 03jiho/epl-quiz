@@ -58,7 +58,17 @@
 }
 ```
 
-> 수치는 공개 자료 기반의 **근사치**이며 게임용입니다. 정확한 기록은 공식 출처를 확인하세요.
+### 수치의 출처와 정확도
+
+| 항목 | 상태 |
+| --- | --- |
+| PL 통산 골·출전 | 위키피디아 [100골 클럽](https://en.wikipedia.org/wiki/List_of_Premier_League_players_with_100_or_more_goals)·[500경기 클럽](https://en.wikipedia.org/wiki/List_of_Premier_League_players_with_300_or_more_appearances) 표와 대조 (해당 선수 한정). 나머지는 추정치 |
+| 최고 이적료 | 기록급 이적은 [최고 이적료 목록](https://en.wikipedia.org/wiki/List_of_most_expensive_association_football_transfers)과 대조. 중간 규모는 보도된 파운드 금액의 유로 환산 근사치 |
+| 소속팀 | 2026-27 시즌 구단별 위키피디아 문서로 전수 확인 |
+| 시장가치·주급 | **추정치** — 공식 공개 수치가 없음 |
+| 한 시즌 최다 골·도움 | PL 밖 시즌도 포함 (예: 교케레시의 스포르팅 39골) |
+
+유스 출신·자유이적 선수의 이적료는 0으로 두며, 해당 선수는 이적료 라운드에 나오지 않습니다.
 
 ## 기술 스택
 
