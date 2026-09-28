@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Check, Copy, RotateCcw, X } from "lucide-react";
-import { STATS, STAT_KEYS, type Player, type StatKey } from "@/lib/quiz";
+import { STATS, type Player, type StatKey } from "@/lib/quiz";
 
 export default function ResultModal({
   open,
@@ -79,28 +79,13 @@ export default function ResultModal({
             </div>
 
             <p className="mt-2 text-sm text-white/75">
-              <b className="font-bold text-epl-green">{right.name}</b>의 {STATS[stat].label}는{" "}
-              <b className="font-bold text-white">{STATS[stat].format(STATS[stat].get(right))}</b>
-              였습니다.
+              이번 라운드는 <b className="font-bold text-white">{STATS[stat].label}</b> 비교였습니다.
             </p>
 
-            <StatTable left={left} right={right} active={stat} />
-
-            {(left.transferNote || right.transferNote) && (
-              <div className="mt-3 space-y-1 rounded-xl bg-black/25 p-3 text-[11px] leading-relaxed text-white/75">
-                {left.transferNote && (
-                  <p>
-                    <b className="font-semibold text-white">{left.name}</b> — {left.transferNote}
-                  </p>
-                )}
-                {right.transferNote && (
-                  <p>
-                    <b className="font-semibold text-epl-green">{right.name}</b> —{" "}
-                    {right.transferNote}
-                  </p>
-                )}
-              </div>
-            )}
+            <div className="mt-4 grid grid-cols-2 gap-3">
+              <PlayerStat player={left} stat={stat} />
+              <PlayerStat player={right} stat={stat} answer />
+            </div>
 
             {share && (
               <pre className="mt-3 whitespace-pre-wrap rounded-xl bg-black/25 p-3 text-sm leading-relaxed">
@@ -135,65 +120,35 @@ export default function ResultModal({
   );
 }
 
-function StatTable({ left, right, active }: { left: Player; right: Player; active: StatKey }) {
-  return (
-    <table className="mt-4 w-full table-fixed text-[11px]">
-      <thead>
-        <tr className="text-white/50">
-          <th className="w-[36%] pb-2 text-left font-normal">기록</th>
-          <th className="pb-2 text-right font-semibold text-white/85">{short(left.name)}</th>
-          <th className="pb-2 text-right font-semibold text-epl-green">{short(right.name)}</th>
-        </tr>
-      </thead>
-      <tbody>
-        <Row label="소속" l={left.team} r={right.team} />
-        <Row
-          label="포지션 · 나이"
-          l={`${left.position} · ${left.age}세`}
-          r={`${right.position} · ${right.age}세`}
-        />
-        {STAT_KEYS.map((key) => {
-          const { label, format, get } = STATS[key];
-          return (
-            <Row
-              key={key}
-              label={label}
-              l={format(get(left))}
-              r={format(get(right))}
-              highlight={key === active}
-            />
-          );
-        })}
-      </tbody>
-    </table>
-  );
-}
-
-function Row({
-  label,
-  l,
-  r,
-  highlight,
+function PlayerStat({
+  player,
+  stat,
+  answer,
 }: {
-  label: string;
-  l: string;
-  r: string;
-  highlight?: boolean;
+  player: Player;
+  stat: StatKey;
+  /** 맞혀야 했던 쪽 */
+  answer?: boolean;
 }) {
-  const cell = highlight ? "font-extrabold text-white" : "text-white/85";
+  const { format, get } = STATS[stat];
   return (
-    <tr className={highlight ? "bg-epl-green/15" : undefined}>
-      <td className={`py-1.5 pl-1.5 ${highlight ? "font-bold text-epl-green" : "text-white/60"}`}>
-        {label}
-      </td>
-      <td className={`py-1.5 pr-1.5 text-right ${cell}`}>{l}</td>
-      <td className={`py-1.5 pr-1.5 text-right ${cell}`}>{r}</td>
-    </tr>
+    <div
+      className={`rounded-xl border p-3 text-center ${
+        answer ? "border-epl-green/60 bg-epl-green/10" : "border-white/15 bg-white/5"
+      }`}
+    >
+      <p className="text-sm font-bold leading-tight">{player.name}</p>
+      <p className="mt-1 text-[11px] text-white/60">
+        {player.team} · {player.position}
+      </p>
+      <p className={`mt-2 text-2xl font-extrabold ${answer ? "text-epl-green" : "text-white"}`}>
+        {format(get(player))}
+      </p>
+      {stat === "transferFee" && player.transferNote && (
+        <p className="mt-2 border-t border-white/10 pt-2 text-[11px] leading-snug text-white/70">
+          {player.transferNote}
+        </p>
+      )}
+    </div>
   );
-}
-
-/** 표 머리글이 넘치지 않게 성을 우선 표시 */
-function short(name: string) {
-  const parts = name.split(" ");
-  return parts.length > 1 ? parts.slice(1).join(" ") : name;
 }
