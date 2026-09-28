@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { ChevronDown, ChevronUp, Flame, Trophy } from "lucide-react";
+import { ChevronDown, ChevronUp, Flame, Info, Trophy } from "lucide-react";
 import ResultModal from "@/components/ResultModal";
 import { BLOCK_SIZE, STATS, buildRound, isHigher, shareText, type Player } from "@/lib/quiz";
 
@@ -93,13 +93,13 @@ export default function UpDownGame({
           key={stat}
           initial={{ scale: 0.85, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
-          className={`rounded-full px-4 py-1.5 text-sm font-semibold ${
-            isStatChange ? "bg-epl-green text-epl-purple" : "bg-white/10"
+          className={`rounded-full px-5 py-2 text-base font-bold ${
+            isStatChange ? "bg-epl-green text-epl-purple" : "bg-white/15"
           }`}
         >
           {isStatChange ? `스탯 변경 · ${label}` : label}
         </motion.span>
-        <span className="text-[11px] text-white/35">{`${BLOCK_SIZE}라운드마다 스탯이 바뀝니다`}</span>
+        <span className="text-xs text-white/55">{`${BLOCK_SIZE}라운드마다 스탯이 바뀝니다`}</span>
       </div>
 
       <div className="grid grid-cols-2 gap-3">
@@ -143,17 +143,21 @@ export default function UpDownGame({
         </button>
       </div>
 
-      <p className="text-center text-xs text-white/40">
-        오른쪽 선수의 <b className="font-semibold text-white/60">{label}</b> — 왼쪽보다 높을까요,
+      <p className="text-center text-sm text-white/70">
+        오른쪽 선수의 <b className="font-bold text-white">{label}</b> — 왼쪽보다 높을까요,
         낮을까요?
       </p>
 
-      <p className="border-t border-white/10 pt-4 text-center text-[11px] leading-relaxed text-white/30">
-        골·출전·시즌 기록은 <b className="font-semibold text-white/45">프리미어리그 경기 기준</b>,
-        이적료는 <b className="font-semibold text-white/45">PL 클럽이 주고받은 금액</b> 기준입니다.
-        <br />
-        시장가치·주급은 공개 자료 기반 추정치입니다.
-      </p>
+      <div className="space-y-1.5 rounded-xl border border-white/15 bg-white/5 p-4 text-xs leading-relaxed text-white/70">
+        <p className="flex gap-2">
+          <Info className="mt-0.5 size-4 shrink-0 text-epl-green" aria-hidden />
+          <span>
+            골·출전·시즌 기록은 <b className="font-bold text-white">프리미어리그 경기 기준</b>,
+            이적료는 <b className="font-bold text-white">PL 클럽이 주고받은 금액</b> 기준입니다.
+          </span>
+        </p>
+        <p className="pl-6 text-white/65">시장가치·주급은 공개 자료 기반 추정치입니다.</p>
+      </div>
 
       <ResultModal
         open={dead}
@@ -183,7 +187,7 @@ function PlayerCard({
   return (
     <div className="flex min-h-40 flex-col items-center justify-center rounded-2xl border border-white/10 bg-white/5 p-4 text-center">
       <p className="text-base font-bold leading-tight">{player.name}</p>
-      <p className="mt-1 text-xs text-white/50">
+      <p className="mt-1 text-xs text-white/65">
         {player.team} · {player.position}
       </p>
       <AnimatePresence mode="wait">
