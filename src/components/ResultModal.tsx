@@ -3,23 +3,27 @@
 import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Check, Copy, RotateCcw, X } from "lucide-react";
+import { STATS, STAT_KEYS, type Player, type StatKey } from "@/lib/quiz";
 
 export default function ResultModal({
   open,
-  solved,
   title,
-  answerName,
-  detail,
+  left,
+  right,
+  stat,
   share,
   onClose,
   onRetry,
 }: {
   open: boolean;
-  solved: boolean;
   title: string;
-  answerName: string;
-  detail?: string;
-  /** 클립보드로 복사할 공유 텍스트. 없으면 공유 버튼 숨김 */
+  /** 기준이 됐던 선수 */
+  left: Player;
+  /** 맞혀야 했던 선수 */
+  right: Player;
+  /** 이번 라운드에 비교한 스탯 */
+  stat: StatKey;
+  /** 클립보드로 복사할 공유 텍스트 */
   share?: string;
   onClose: () => void;
   onRetry?: () => void;
@@ -47,7 +51,7 @@ export default function ResultModal({
     <AnimatePresence>
       {open && (
         <motion.div
-          className="fixed inset-0 z-30 flex items-end justify-center bg-black/60 p-4 sm:items-center"
+          className="fixed inset-0 z-30 flex items-end justify-center overflow-y-auto bg-black/70 p-4 sm:items-center"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -56,37 +60,59 @@ export default function ResultModal({
           aria-modal="true"
         >
           <motion.div
-            className="w-full max-w-sm rounded-2xl border border-white/15 bg-epl-purple-light p-6 text-center"
+            className="my-auto w-full max-w-md rounded-2xl border border-white/15 bg-epl-purple-light p-5"
             initial={{ y: 40, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: 40, opacity: 0 }}
             onClick={(e) => e.stopPropagation()}
           >
-            <button
-              onClick={onClose}
-              aria-label="닫기"
-              className="ml-auto block rounded-lg p-1 text-white/50 hover:bg-white/10"
-            >
-              <X className="size-5" />
-            </button>
-            <p className="text-4xl">{solved ? "🎉" : "😵"}</p>
-            <h2 className="mt-2 text-xl font-extrabold">{title}</h2>
-            <p className="mt-1 text-sm text-white/70">
-              정답: <span className="font-semibold text-epl-green">{answerName}</span>
+            <div className="flex items-center gap-2">
+              <span className="text-2xl">😵</span>
+              <h2 className="text-lg font-extrabold">{title}</h2>
+              <button
+                onClick={onClose}
+                aria-label="닫기"
+                className="ml-auto rounded-lg p-1 text-white/60 hover:bg-white/10"
+              >
+                <X className="size-5" />
+              </button>
+            </div>
+
+            <p className="mt-2 text-sm text-white/75">
+              <b className="font-bold text-epl-green">{right.name}</b>의 {STATS[stat].label}는{" "}
+              <b className="font-bold text-white">{STATS[stat].format(STATS[stat].get(right))}</b>
+              였습니다.
             </p>
-            {detail && <p className="mt-1 text-sm text-white/60">{detail}</p>}
+
+            <StatTable left={left} right={right} active={stat} />
+
+            {(left.transferNote || right.transferNote) && (
+              <div className="mt-3 space-y-1 rounded-xl bg-black/25 p-3 text-[11px] leading-relaxed text-white/75">
+                {left.transferNote && (
+                  <p>
+                    <b className="font-semibold text-white">{left.name}</b> — {left.transferNote}
+                  </p>
+                )}
+                {right.transferNote && (
+                  <p>
+                    <b className="font-semibold text-epl-green">{right.name}</b> —{" "}
+                    {right.transferNote}
+                  </p>
+                )}
+              </div>
+            )}
 
             {share && (
-              <pre className="mt-4 whitespace-pre-wrap rounded-xl bg-black/25 p-3 text-left text-sm leading-relaxed">
+              <pre className="mt-3 whitespace-pre-wrap rounded-xl bg-black/25 p-3 text-sm leading-relaxed">
                 {share}
               </pre>
             )}
 
-            <div className="mt-5 flex gap-2">
+            <div className="mt-4 flex gap-2">
               {share && (
                 <button
                   onClick={copy}
-                  className="flex h-11 flex-1 items-center justify-center gap-2 rounded-xl bg-epl-green font-bold text-epl-purple active:scale-95"
+                  className="flex h-12 flex-1 items-center justify-center gap-2 rounded-xl bg-epl-green font-bold text-epl-purple active:scale-95"
                 >
                   {copied ? <Check className="size-4" /> : <Copy className="size-4" />}
                   {copied ? "복사됨!" : "결과 공유"}
@@ -95,7 +121,7 @@ export default function ResultModal({
               {onRetry && (
                 <button
                   onClick={onRetry}
-                  className="flex h-11 flex-1 items-center justify-center gap-2 rounded-xl border border-white/20 font-bold active:scale-95"
+                  className="flex h-12 flex-1 items-center justify-center gap-2 rounded-xl border border-white/25 font-bold active:scale-95"
                 >
                   <RotateCcw className="size-4" />
                   다시하기
@@ -107,4 +133,67 @@ export default function ResultModal({
       )}
     </AnimatePresence>
   );
+}
+
+function StatTable({ left, right, active }: { left: Player; right: Player; active: StatKey }) {
+  return (
+    <table className="mt-4 w-full table-fixed text-[11px]">
+      <thead>
+        <tr className="text-white/50">
+          <th className="w-[36%] pb-2 text-left font-normal">기록</th>
+          <th className="pb-2 text-right font-semibold text-white/85">{short(left.name)}</th>
+          <th className="pb-2 text-right font-semibold text-epl-green">{short(right.name)}</th>
+        </tr>
+      </thead>
+      <tbody>
+        <Row label="소속" l={left.team} r={right.team} />
+        <Row
+          label="포지션 · 나이"
+          l={`${left.position} · ${left.age}세`}
+          r={`${right.position} · ${right.age}세`}
+        />
+        {STAT_KEYS.map((key) => {
+          const { label, format, get } = STATS[key];
+          return (
+            <Row
+              key={key}
+              label={label}
+              l={format(get(left))}
+              r={format(get(right))}
+              highlight={key === active}
+            />
+          );
+        })}
+      </tbody>
+    </table>
+  );
+}
+
+function Row({
+  label,
+  l,
+  r,
+  highlight,
+}: {
+  label: string;
+  l: string;
+  r: string;
+  highlight?: boolean;
+}) {
+  const cell = highlight ? "font-extrabold text-white" : "text-white/85";
+  return (
+    <tr className={highlight ? "bg-epl-green/15" : undefined}>
+      <td className={`py-1.5 pl-1.5 ${highlight ? "font-bold text-epl-green" : "text-white/60"}`}>
+        {label}
+      </td>
+      <td className={`py-1.5 pr-1.5 text-right ${cell}`}>{l}</td>
+      <td className={`py-1.5 pr-1.5 text-right ${cell}`}>{r}</td>
+    </tr>
+  );
+}
+
+/** 표 머리글이 넘치지 않게 성을 우선 표시 */
+function short(name: string) {
+  const parts = name.split(" ");
+  return parts.length > 1 ? parts.slice(1).join(" ") : name;
 }

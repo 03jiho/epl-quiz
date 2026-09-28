@@ -29,6 +29,12 @@ for (const p of players) {
     assert.ok(v >= 0 && Number.isFinite(v), `${p.id}: ${key} 값 이상 (${v})`);
   }
   assert.ok(p.plGoals <= p.plApps, `${p.id}: 통산 골이 출전 수보다 많음`);
+  if (p.transferFee > 0) {
+    // 이적료가 있으면 경로도 있어야 한다 ("A → B (연도)")
+    assert.match(p.transferNote ?? "", /^.+ → .+ \(\d{4}\)$/, `${p.id}: 이적 경로 누락/형식 오류`);
+  } else {
+    assert.equal(p.transferNote, undefined, `${p.id}: 이적료 0인데 경로가 있음`);
+  }
   assert.ok(p.bestSeason.goals <= 50 && p.bestSeason.assists <= 30, `${p.id}: 시즌 기록 과다`);
   // 시즌 기록은 PL 시즌만 쓴다 — 타 리그 시즌이 섞이면 통산 골을 넘어버린다
   assert.ok(

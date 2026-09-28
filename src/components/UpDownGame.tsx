@@ -161,10 +161,10 @@ export default function UpDownGame({
 
       <ResultModal
         open={dead}
-        solved={false}
         title={`${streak}연속에서 종료`}
-        answerName={`${right.name} — ${format(get(right))}`}
-        detail={`${left.name}는 ${format(get(left))} · ${label}`}
+        left={left}
+        right={right}
+        stat={stat}
         share={shareText(streak, best, dateKey)}
         onClose={restart}
         onRetry={restart}

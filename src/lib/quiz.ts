@@ -11,6 +11,8 @@ export interface Player {
   marketValue: number;
   /** 프리미어리그 클럽이 지불했거나 받은 최고 이적료, €M */
   transferFee: number;
+  /** 그 이적의 경로. 예: "리버풀 → 맨체스터 시티 (2015)" — 확인된 선수만 */
+  transferNote?: string;
   /** 주급, £k */
   weeklyWage: number;
   /** 프리미어리그 통산 골 (PL 경기만) */
