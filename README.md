@@ -16,7 +16,7 @@
 | --- | --- |
 | 시장가치 | €M |
 | 최고 이적료 | €M (PL 클럽이 주고받은 금액) |
-| 주급 | £k |
+| 주급 | £k (PL 소속 당시 기준) |
 | PL 통산 골 | 골 |
 | PL 통산 출전 | 경기 |
 | PL 한 시즌 최다 골 | 골 |
@@ -53,7 +53,7 @@
   "marketValue": 180,          // 현재(은퇴 선수는 전성기) 추정 시장가치, €M
   "transferFee": 60,           // PL 클럽이 지불했거나 받은 최고 이적료, €M
   "transferNote": "Borussia Dortmund → Manchester City (2022)",  // 그 이적의 경로
-  "weeklyWage": 525,           // 주급, £k
+  "weeklyWage": 525,           // 주급, £k (PL 소속 당시 기준)
   "plGoals": 105,              // PL 통산 골
   "plApps": 130,               // PL 통산 출전
   "bestSeason": { "season": "2022-23", "goals": 36, "assists": 8 }
@@ -67,7 +67,8 @@
 | PL 통산 골·출전 | 위키피디아 [100골 클럽](https://en.wikipedia.org/wiki/List_of_Premier_League_players_with_100_or_more_goals)·[500경기 클럽](https://en.wikipedia.org/wiki/List_of_Premier_League_players_with_300_or_more_appearances) 표와 대조 (해당 선수 한정). 나머지는 추정치 |
 | 최고 이적료 | **PL 클럽이 지불했거나 받은 이적만** 집계 (예: 호날두는 맨유 → 레알 €94M, 레알 → 유벤투스 €100M이 아님). 기록급 이적은 [최고 이적료 목록](https://en.wikipedia.org/wiki/List_of_most_expensive_association_football_transfers)과 대조. 중간 규모는 보도된 파운드 금액을 **£1 ≈ €1.15**로 환산한 근사치이며, 경로(`A → B (연도)`)와 함께 전수 대조함 |
 | 소속팀 | 2026-27 시즌 구단별 위키피디아 문서로 전수 확인 |
-| 시장가치·주급 | **추정치** — 공식 공개 수치가 없음 |
+| 시장가치 | **추정치** — 공식 공개 수치가 없음 |
+| 주급 | **추정치**. PL을 떠난 선수는 사우디·튀르키예 등 현 소속이 아니라 **PL 시절 주급** 사용 (예: 케인은 바이에른이 아닌 스퍼스 시절 £200k) |
 | PL 한 시즌 최다 골·도움 | **프리미어리그 시즌만** 집계 (타 리그 시즌 제외). 자체 점검에서 `시즌 골 ≤ PL 통산 골`로 강제 |
 
 유스 출신·자유이적 선수의 이적료는 0으로 두며, 해당 선수는 이적료 라운드에 나오지 않습니다.

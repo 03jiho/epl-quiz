@@ -13,7 +13,7 @@ export interface Player {
   transferFee: number;
   /** 그 이적의 경로. 예: "리버풀 → 맨체스터 시티 (2015)" — 확인된 선수만 */
   transferNote?: string;
-  /** 주급, £k */
+  /** 프리미어리그 시절 기준 주급, £k (리그를 떠난 선수는 PL 소속 당시 최고 주급) */
   weeklyWage: number;
   /** 프리미어리그 통산 골 (PL 경기만) */
   plGoals: number;
