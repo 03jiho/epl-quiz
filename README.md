@@ -65,7 +65,7 @@
 | 항목 | 상태 |
 | --- | --- |
 | PL 통산 골·출전 | 위키피디아 [100골 클럽](https://en.wikipedia.org/wiki/List_of_Premier_League_players_with_100_or_more_goals)·[500경기 클럽](https://en.wikipedia.org/wiki/List_of_Premier_League_players_with_300_or_more_appearances) 표와 대조 (해당 선수 한정). 나머지는 추정치 |
-| 최고 이적료 | **PL 클럽이 지불했거나 받은 이적만** 집계 (예: 호날두는 맨유 → 레알 €94M, 레알 → 유벤투스 €100M이 아님). 기록급 이적은 [최고 이적료 목록](https://en.wikipedia.org/wiki/List_of_most_expensive_association_football_transfers)과 대조, 중간 규모는 보도된 파운드 금액의 유로 환산 근사치 |
+| 최고 이적료 | **PL 클럽이 지불했거나 받은 이적만** 집계 (예: 호날두는 맨유 → 레알 €94M, 레알 → 유벤투스 €100M이 아님). 기록급 이적은 [최고 이적료 목록](https://en.wikipedia.org/wiki/List_of_most_expensive_association_football_transfers)과 대조. 중간 규모는 보도된 파운드 금액을 **£1 ≈ €1.15**로 환산한 근사치이며, 경로(`A → B (연도)`)와 함께 전수 대조함 |
 | 소속팀 | 2026-27 시즌 구단별 위키피디아 문서로 전수 확인 |
 | 시장가치·주급 | **추정치** — 공식 공개 수치가 없음 |
 | PL 한 시즌 최다 골·도움 | **프리미어리그 시즌만** 집계 (타 리그 시즌 제외). 자체 점검에서 `시즌 골 ≤ PL 통산 골`로 강제 |
