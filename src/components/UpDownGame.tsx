@@ -156,9 +156,14 @@ export default function UpDownGame({
             이적료는 <b className="font-bold text-white">PL 클럽이 주고받은 금액</b> 기준입니다.
           </span>
         </p>
-        <p className="pl-6 text-white/65">
-          주급은 PL 소속 당시 기준이며, 시장가치·주급 모두 공개 자료 기반 추정치입니다.
+        <p className="pl-6">
+          주급은{" "}
+          <b className="rounded bg-epl-green/20 px-1.5 py-0.5 font-bold text-epl-green">
+            PL 소속 당시 기준
+          </b>{" "}
+          — 리그를 떠난 선수도 PL 시절 주급을 씁니다.
         </p>
+        <p className="pl-6 text-white/55">시장가치·주급은 공개 자료 기반 추정치입니다.</p>
       </div>
 
       <ResultModal

@@ -47,7 +47,7 @@ export const STATS = {
     eligible: (p: Player) => p.transferFee > 0,
   },
   weeklyWage: {
-    label: "주급",
+    label: "주급 (PL 당시)",
     format: (v: number) => `£${v}k`,
     get: (p: Player) => p.weeklyWage,
     eligible: (p: Player) => p.weeklyWage > 0,
