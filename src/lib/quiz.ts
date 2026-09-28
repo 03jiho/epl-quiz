@@ -4,6 +4,8 @@ export interface Player {
   id: string;
   name: string;
   team: string;
+  /** 임대 중일 때 원소속 구단 */
+  parentClub?: string;
   nationality: string;
   position: Position;
   age: number;
@@ -38,6 +40,14 @@ const activeOnly = (p: Player) => p.team !== LEGEND;
  * `eligible`은 정답이 뻔해지는 조합을 출제에서 제외한다.
  * (자유이적 €0, 골키퍼의 통산 골 0 등은 비교 자체가 성립하지 않는다)
  */
+/** 배율만으로는 걸러지지 않는 정수 스탯의 최소 절대 격차 */
+const MIN_GAP: Partial<Record<string, number>> = {
+  plGoals: 5,
+  plApps: 15,
+  seasonGoals: 3,
+  seasonAssists: 3,
+};
+
 export const STATS = {
   marketValue: {
     label: "시장가치",
@@ -146,9 +156,12 @@ function pickChallenger(
   get: (p: Player) => number,
   seed: string,
   used: Set<string>,
+  minGap = 0,
 ): Player | null {
   const anchorValue = get(anchor);
-  const candidates = pool.filter((p) => !used.has(p.id) && get(p) !== anchorValue);
+  const candidates = pool.filter(
+    (p) => !used.has(p.id) && Math.abs(get(p) - anchorValue) >= Math.max(minGap, 1e-9),
+  );
   if (candidates.length === 0) return null;
 
   const ratio = (p: Player) => {
@@ -158,15 +171,16 @@ function pickChallenger(
   const band = bandFor(seed);
   const attempts = [
     (p: Player) => ratio(p) >= band.min && ratio(p) <= band.max,
-    (p: Player) => ratio(p) >= band.min, // 위쪽으로 넓히기
-    (p: Player) => ratio(p) >= 1.12, // 거의 동급인 찍기 라운드만 제외
+    (p: Player) => ratio(p) >= 1.12 && ratio(p) <= 6, // 구간을 넓히되 위쪽은 막아 둔다
+    (p: Player) => ratio(p) <= 8,
   ];
 
   for (const matches of attempts) {
     const near = candidates.filter(matches);
     if (near.length >= 3) return near[hash(seed) % near.length];
   }
-  return candidates[hash(seed) % candidates.length];
+  // 구간에 아무도 없으면(기준값이 극단적일 때) 가장 값이 가까운 선수로 — 최악의 라운드를 줄인다
+  return candidates.reduce((best, p) => (ratio(p) < ratio(best) ? p : best), candidates[0]);
 }
 
 /**
@@ -179,18 +193,39 @@ function pickChallenger(
 export function buildRound(players: Player[], seed: string, round: number): Round {
   const stat = statForRound(round);
   const { get, eligible } = STATS[stat];
+  const minGap = MIN_GAP[stat] ?? 0;
   const pool = players.filter(eligible);
   const block = Math.floor(round / BLOCK_SIZE);
   const step = round % BLOCK_SIZE;
   const isStatChange = step === 0 && round > 0;
 
-  let left = pool[hash(`${seed}:anchor:${block}`) % pool.length];
+  // 값이 극단적인 선수가 기준이 되면 상대가 6배 넘게 벌어져 라운드가 뻔해진다.
+  // 그런 앵커는 건너뛰고 다음 후보를 쓴다.
+  const hasFairRival = (p: Player) => {
+    const v = get(p);
+    return pool.some((q) => {
+      if (q.id === p.id) return false;
+      const w = get(q);
+      if (Math.abs(w - v) < minGap) return false;
+      const ratio = w > v ? w / v : v / w;
+      return ratio > 1 && ratio <= 6;
+    });
+  };
+  const start = hash(`${seed}:anchor:${block}`) % pool.length;
+  let left = pool[start];
+  for (let i = 0; i < pool.length; i++) {
+    const candidate = pool[(start + i) % pool.length];
+    if (hasFairRival(candidate)) {
+      left = candidate;
+      break;
+    }
+  }
   let right = left;
   const used = new Set([left.id]);
 
   // 블록 시작부터 현재 라운드까지 사슬을 다시 만든다 (최대 BLOCK_SIZE회)
   for (let i = 0; i <= step; i++) {
-    const next = pickChallenger(pool, left, get, `${seed}:${block}:${i}`, used);
+    const next = pickChallenger(pool, left, get, `${seed}:${block}:${i}`, used, minGap);
     if (!next) break;
     used.add(next.id);
     if (i === step) {

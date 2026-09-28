@@ -79,6 +79,8 @@ for (let r = 0; r < 200; r++) {
   const spread = hi / lo;
   if (spread <= 4) tight++;
   if (spread < 1.12) coinFlip++;
+  // 기준값이 극단적이어도 8배 넘게 벌어진 라운드는 나오면 안 된다
+  assert.ok(spread <= 8, `라운드 ${r}: ${a.stat} 배율 ${spread.toFixed(1)}x — 너무 뻔함`);
 
   prev = a;
 }

@@ -197,6 +197,9 @@ function PlayerCard({
       <p className="mt-1 text-xs text-white/65">
         {player.team} · {player.position}
       </p>
+      {player.parentClub && (
+        <p className="mt-0.5 text-[10px] text-white/45">임대 · 원소속 {player.parentClub}</p>
+      )}
       <AnimatePresence mode="wait">
         <motion.p
           key={value}

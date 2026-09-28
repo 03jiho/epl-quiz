@@ -141,6 +141,9 @@ function PlayerStat({
       <p className="mt-1 text-[11px] text-white/60">
         {player.team} · {player.position}
       </p>
+      {player.parentClub && (
+        <p className="text-[10px] text-white/45">임대 · 원소속 {player.parentClub}</p>
+      )}
       <p className={`mt-2 text-2xl font-extrabold ${answer ? "text-epl-green" : "text-white"}`}>
         {format(get(player))}
       </p>
