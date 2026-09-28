@@ -30,6 +30,11 @@ for (const p of players) {
   }
   assert.ok(p.plGoals <= p.plApps, `${p.id}: 통산 골이 출전 수보다 많음`);
   assert.ok(p.bestSeason.goals <= 50 && p.bestSeason.assists <= 30, `${p.id}: 시즌 기록 과다`);
+  // 시즌 기록은 PL 시즌만 쓴다 — 타 리그 시즌이 섞이면 통산 골을 넘어버린다
+  assert.ok(
+    p.bestSeason.goals <= p.plGoals,
+    `${p.id}: 시즌 ${p.bestSeason.goals}골 > PL 통산 ${p.plGoals}골 (타 리그 시즌 의심)`,
+  );
 }
 
 // 라운드 구성: 결정적이고, 항상 서로 다른 두 선수 + 무승부 없음

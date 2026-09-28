@@ -148,6 +148,13 @@ export default function UpDownGame({
         낮을까요?
       </p>
 
+      <p className="border-t border-white/10 pt-4 text-center text-[11px] leading-relaxed text-white/30">
+        골·출전·시즌 기록은 모두 <b className="font-semibold text-white/45">프리미어리그 경기 기준</b>
+        입니다.
+        <br />
+        시장가치·주급은 공개 자료 기반 추정치입니다.
+      </p>
+
       <ResultModal
         open={dead}
         solved={false}

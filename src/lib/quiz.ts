@@ -9,14 +9,15 @@ export interface Player {
   age: number;
   /** 현재(은퇴 선수는 전성기) 추정 시장가치, €M */
   marketValue: number;
-  /** 커리어 최고 이적료, €M */
+  /** 프리미어리그 클럽이 지불했거나 받은 최고 이적료, €M */
   transferFee: number;
   /** 주급, £k */
   weeklyWage: number;
-  /** 프리미어리그 통산 골 */
+  /** 프리미어리그 통산 골 (PL 경기만) */
   plGoals: number;
   /** 프리미어리그 통산 출전 */
   plApps: number;
+  /** 프리미어리그 단일 시즌 최고 기록 (타 리그 시즌은 제외) */
   bestSeason: { season: string; goals: number; assists: number };
 }
 
@@ -62,13 +63,13 @@ export const STATS = {
     eligible: all,
   },
   seasonGoals: {
-    label: "한 시즌 최다 골",
+    label: "PL 한 시즌 최다 골",
     format: suffix("골"),
     get: (p: Player) => p.bestSeason.goals,
     eligible: (p: Player) => outfield(p) && p.bestSeason.goals > 0,
   },
   seasonAssists: {
-    label: "한 시즌 최다 도움",
+    label: "PL 한 시즌 최다 도움",
     format: suffix("도움"),
     get: (p: Player) => p.bestSeason.assists,
     eligible: (p: Player) => outfield(p) && p.bestSeason.assists > 0,
