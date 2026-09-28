@@ -97,6 +97,16 @@ for (let block = 0; block < 12; block++) {
   assert.equal(seen.size, BLOCK_SIZE + 1, `블록 ${block}: 같은 선수가 재등장`);
 }
 
+// 시장가치 라운드에는 레전드가 나오지 않는다 (전성기 추정치라 기준이 다름)
+for (let r = 0; r < 300; r++) {
+  const round = buildRound(players, `legend-check-${r}`, r);
+  if (round.stat !== "marketValue") continue;
+  assert.ok(
+    round.left.team !== "레전드" && round.right.team !== "레전드",
+    `라운드 ${r}: 시장가치 라운드에 레전드 출제`,
+  );
+}
+
 // 시드가 다르면 문제도 달라진다
 const runA = Array.from({ length: 20 }, (_, r) => buildRound(players, "seed-a", r).left.id).join();
 const runB = Array.from({ length: 20 }, (_, r) => buildRound(players, "seed-b", r).left.id).join();

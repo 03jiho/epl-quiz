@@ -28,6 +28,11 @@ const euro = (v: number) => `€${v}M`;
 const suffix = (unit: string) => (v: number) => `${v}${unit}`;
 const outfield = (p: Player) => p.position !== "GK";
 const all = () => true;
+/** 은퇴 선수의 team 값 */
+export const LEGEND = "레전드";
+// 레전드의 시장가치는 '전성기 추정치'라 현역과 기준이 다르다.
+// 섞으면 "레전드가 싼 쪽"이라는 공짜 힌트가 되므로 이 스탯에서만 제외한다.
+const activeOnly = (p: Player) => p.team !== LEGEND;
 
 /**
  * `eligible`은 정답이 뻔해지는 조합을 출제에서 제외한다.
@@ -38,7 +43,7 @@ export const STATS = {
     label: "시장가치",
     format: euro,
     get: (p: Player) => p.marketValue,
-    eligible: all,
+    eligible: activeOnly,
   },
   transferFee: {
     label: "최고 이적료",
